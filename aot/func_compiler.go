@@ -581,9 +581,8 @@ func (c *funcCompiler) emitReturn() {
 }
 func (c *funcCompiler) emitCall(funcIdx int, opname string) {
 	ft := c.moduleInfo.getFuncType(funcIdx)
-	paramCount := len(ft.ParamTypes)
 
-	c.stackPtr -= paramCount
+	c.stackPtr -= len(ft.ParamTypes)
 	if len(ft.ResultTypes) > 0 {
 		c.printf("stack[%d] = ", c.stackPtr)
 	}
@@ -592,11 +591,20 @@ func (c *funcCompiler) emitCall(funcIdx int, opname string) {
 	} else {
 		c.printf("m.f%d(", funcIdx)
 	}
-	for i := 0; i < paramCount; i++ {
+	for i, vt := range ft.ParamTypes {
 		if i > 0 {
 			c.print(", ")
 		}
-		c.printf("stack[%d]", c.stackPtr+i)
+		switch vt {
+		case binary.ValTypeI32:
+			c.printf("int32(stack[%d])", c.stackPtr+i)
+		case binary.ValTypeI64:
+			c.printf("int64(stack[%d])", c.stackPtr+i)
+		case binary.ValTypeF32:
+			c.printf("f32(stack[%d])", c.stackPtr+i)
+		case binary.ValTypeF64:
+			c.printf("f64(stack[%d])", c.stackPtr+i)
+		}
 	}
 	if len(ft.ResultTypes) > 0 {
 		c.stackPtr++
