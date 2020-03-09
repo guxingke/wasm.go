@@ -46,7 +46,7 @@ type codeValidator struct {
 	ctrls      ctrlStack
 	mv         *moduleValidator
 	localCount int
-	opdMax     int
+	maxOpds    int
 	instrPath  map[int]string // depth -> opname
 }
 
@@ -99,6 +99,9 @@ func push_opd(type : val_type | Unknown) =
 */
 func (cv *codeValidator) pushOpd(vt valType) {
 	cv.opds = append(cv.opds, vt)
+	if n := len(cv.opds); n > cv.maxOpds {
+		cv.maxOpds = n
+	}
 }
 
 /*
