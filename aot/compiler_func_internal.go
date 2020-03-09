@@ -8,7 +8,7 @@ import (
 	"github.com/zxh0/wasm.go/binary"
 )
 
-type funcCompiler struct {
+type internalFuncCompiler struct {
 	printer
 	moduleInfo moduleInfo
 	stackPtr   int
@@ -23,47 +23,47 @@ type blockInfo struct {
 	stackPtr  int
 }
 
-func newFuncCompiler(moduleInfo moduleInfo) *funcCompiler {
-	return &funcCompiler{
+func newFuncCompiler(moduleInfo moduleInfo) *internalFuncCompiler {
+	return &internalFuncCompiler{
 		printer:    printer{sb: &strings.Builder{}},
 		moduleInfo: moduleInfo,
 		usedLabels: map[int]bool{},
 	}
 }
 
-func (c *funcCompiler) printIndents() {
+func (c *internalFuncCompiler) printIndents() {
 	for i := len(c.blocks); i > 0; i-- {
 		c.sb.WriteByte('\t')
 	}
 }
 
-func (c *funcCompiler) stackPush() int {
+func (c *internalFuncCompiler) stackPush() int {
 	c.stackPtr++
 	if c.stackMax < c.stackPtr {
 		c.stackMax = c.stackPtr
 	}
 	return c.stackPtr - 1
 }
-func (c *funcCompiler) stackPop() int {
+func (c *internalFuncCompiler) stackPop() int {
 	c.stackPtr--
 	return c.stackPtr + 1
 }
 
-func (c *funcCompiler) enterBlock(isLoop, hasResult bool) {
+func (c *internalFuncCompiler) enterBlock(isLoop, hasResult bool) {
 	c.blocks = append(c.blocks, blockInfo{
 		isLoop:    isLoop,
 		hasResult: hasResult,
 		stackPtr:  c.stackPtr,
 	})
 }
-func (c *funcCompiler) exitBlock() {
+func (c *internalFuncCompiler) exitBlock() {
 	c.blocks = c.blocks[len(c.blocks)-1:]
 }
-func (c *funcCompiler) blockDepth() int {
+func (c *internalFuncCompiler) blockDepth() int {
 	return len(c.blocks)
 }
 
-func (c *funcCompiler) compile(idx int,
+func (c *internalFuncCompiler) compile(idx int,
 	ft binary.FuncType, code binary.Code) string {
 
 	paramCount := len(ft.ParamTypes)
@@ -86,7 +86,7 @@ func (c *funcCompiler) compile(idx int,
 	return strings.ReplaceAll(c.sb.String(), "$stackMax", stackMax)
 }
 
-func (c *funcCompiler) genParams(paramCount int) {
+func (c *internalFuncCompiler) genParams(paramCount int) {
 	for i := 0; i < paramCount; i++ {
 		c.printf("p%d", i)
 		if i < paramCount-1 {
@@ -96,26 +96,26 @@ func (c *funcCompiler) genParams(paramCount int) {
 		}
 	}
 }
-func (c *funcCompiler) genResults(resultCount int) {
+func (c *internalFuncCompiler) genResults(resultCount int) {
 	if resultCount == 1 {
 		c.print(" uint64")
 	}
 }
-func (c *funcCompiler) genLocals(paramCount int) {
+func (c *internalFuncCompiler) genLocals(paramCount int) {
 	c.print("\tstack := [$stackMax]uint64{")
 	for i := 0; i < paramCount; i++ {
 		c.printf("p%d, ", i)
 	}
 	c.print("}\n")
 }
-func (c *funcCompiler) genFuncBody(code binary.Code, resultCount int) {
+func (c *internalFuncCompiler) genFuncBody(code binary.Code, resultCount int) {
 	c.emitBlock(code.Expr, false, resultCount > 0)
 	if resultCount > 0 {
 		c.printf("\treturn stack[%d]\n", c.stackPtr-1)
 	}
 }
 
-func (c *funcCompiler) emitInstr(instr binary.Instruction) {
+func (c *internalFuncCompiler) emitInstr(instr binary.Instruction) {
 	opname := instr.String()
 	c.printIndents()
 	switch instr.Opcode {
@@ -516,7 +516,7 @@ l0: for {
 	break
 }
 */
-func (c *funcCompiler) emitBlock(expr []binary.Instruction, isLoop, hasResult bool) {
+func (c *internalFuncCompiler) emitBlock(expr []binary.Instruction, isLoop, hasResult bool) {
 	c.enterBlock(isLoop, hasResult)
 	c.printIndents()
 	c.printf("/*_l%d:*/ for {\n", c.blockDepth()-1)
@@ -534,7 +534,7 @@ l0: for {
 	break
 }
 */
-func (c *funcCompiler) emitLoop() {
+func (c *internalFuncCompiler) emitLoop() {
 	panic("TODO")
 }
 
@@ -549,10 +549,10 @@ l0: for {
 	}
 }
 */
-func (c *funcCompiler) emitIf() {
+func (c *internalFuncCompiler) emitIf() {
 	panic("TODO")
 }
-func (c *funcCompiler) emitBr(labelIdx uint32) {
+func (c *internalFuncCompiler) emitBr(labelIdx uint32) {
 	n := len(c.blocks) - int(labelIdx) - 1
 	c.usedLabels[n] = true
 	if c.blocks[n].isLoop {
@@ -561,7 +561,7 @@ func (c *funcCompiler) emitBr(labelIdx uint32) {
 		c.printf("break _l%d // br\n", n)
 	}
 }
-func (c *funcCompiler) emitBrIf(labelIdx uint32) {
+func (c *internalFuncCompiler) emitBrIf(labelIdx uint32) {
 	n := len(c.blocks) - int(labelIdx) - 1
 	c.usedLabels[n] = true
 	ret := "" // TODO: return
@@ -573,20 +573,20 @@ func (c *funcCompiler) emitBrIf(labelIdx uint32) {
 		c.stackPtr-1, ret, br, n)
 	c.stackPop()
 }
-func (c *funcCompiler) emitBrTable() {
+func (c *internalFuncCompiler) emitBrTable() {
 	panic("TODO")
 }
-func (c *funcCompiler) emitReturn() {
+func (c *internalFuncCompiler) emitReturn() {
 	panic("TODO")
 }
-func (c *funcCompiler) emitCall(funcIdx int) {
+func (c *internalFuncCompiler) emitCall(funcIdx int) {
 	if funcIdx >= len(c.moduleInfo.importedFuncs) {
 		c.emitInternalCall(funcIdx)
 	} else {
 		c.emitExternalCall(funcIdx)
 	}
 }
-func (c *funcCompiler) emitInternalCall(funcIdx int) {
+func (c *internalFuncCompiler) emitInternalCall(funcIdx int) {
 	ft := c.moduleInfo.getFuncType(funcIdx)
 	c.stackPtr -= len(ft.ParamTypes)
 	if len(ft.ResultTypes) > 0 {
@@ -604,7 +604,7 @@ func (c *funcCompiler) emitInternalCall(funcIdx int) {
 	}
 	c.printf(") // call func#%d\n", funcIdx)
 }
-func (c *funcCompiler) emitExternalCall(funcIdx int) {
+func (c *internalFuncCompiler) emitExternalCall(funcIdx int) {
 	ft := c.moduleInfo.getFuncType(funcIdx)
 	c.stackPtr -= len(ft.ParamTypes)
 	if len(ft.ResultTypes) > 0 {
@@ -644,112 +644,112 @@ func (c *funcCompiler) emitExternalCall(funcIdx int) {
 	}
 	c.printf(") // call func#%d\n", funcIdx)
 }
-func (c *funcCompiler) emitCallIndirect() {
+func (c *internalFuncCompiler) emitCallIndirect() {
 	panic("TODO")
 }
 
-func (c *funcCompiler) emitLoad(instr binary.Instruction, opname, tmpl string) {
+func (c *internalFuncCompiler) emitLoad(instr binary.Instruction, opname, tmpl string) {
 	// tmpl = stack[%d] = binary.LittleEndian.Uint32(m.memory[stack[%d] + %d:]) // %s\n"
 	c.printf(tmpl, c.stackPtr-1, c.stackPtr-1, instr.Args.(binary.MemArg).Offset, opname)
 }
-func (c *funcCompiler) emitStore(instr binary.Instruction, opname, tmpl string) {
+func (c *internalFuncCompiler) emitStore(instr binary.Instruction, opname, tmpl string) {
 	// tmpl = "binary.LittleEndian.PutUint32(m.memory[stack[%d] + %d:], uint32(stack[%d])) // %s\n"
 	c.printf(tmpl, c.stackPtr-2, instr.Args.(binary.MemArg).Offset, c.stackPtr-1, opname)
 	c.stackPtr -= 2
 }
-func (c *funcCompiler) emitMemSize(opname string) {
+func (c *internalFuncCompiler) emitMemSize(opname string) {
 	c.printf("stack[%d] = uint64(len(m.memory) / (64*1024)) // %s\n",
 		c.stackPush(), opname)
 }
-func (c *funcCompiler) emitMemGrow(opname string) {
+func (c *internalFuncCompiler) emitMemGrow(opname string) {
 	f := "n := stack[%d]; "
 	f += "stack[%d] = uint64(len(m.memory) / (64*1024)); "
 	f += "m.memory = append(m.memory, make([]byte, n*64*1024)...) // %s\n"
 	c.printf(f, c.stackPtr-1, c.stackPtr-1, opname)
 }
 
-func (c *funcCompiler) emitConst(val uint64, opname string, arg interface{}) {
+func (c *internalFuncCompiler) emitConst(val uint64, opname string, arg interface{}) {
 	c.printf("stack[%d] = 0x%x // %s %v\n",
 		c.stackPush(), val, opname, arg)
 }
 
-func (c *funcCompiler) emitI32BinCmpU(operator, opname string) {
+func (c *internalFuncCompiler) emitI32BinCmpU(operator, opname string) {
 	c.printf("stack[%d] = b2i(uint32(stack[%d]) %s uint32(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI32BinCmpS(operator, opname string) {
+func (c *internalFuncCompiler) emitI32BinCmpS(operator, opname string) {
 	c.printf("stack[%d] = b2i(int32(stack[%d]) %s int32(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI32BinArithU(operator, opname string) {
+func (c *internalFuncCompiler) emitI32BinArithU(operator, opname string) {
 	c.printf("stack[%d] = uint32(stack[%d]) %s uint32(stack[%d]) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI32BinArithS(operator, opname string) {
+func (c *internalFuncCompiler) emitI32BinArithS(operator, opname string) {
 	c.printf("stack[%d] = int32(stack[%d]) %s int32(stack[%d]) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
 
-func (c *funcCompiler) emitI64BinCmpU(operator, opname string) {
+func (c *internalFuncCompiler) emitI64BinCmpU(operator, opname string) {
 	c.printf("stack[%d] = b2i(stack[%d] %s stack[%d]) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI64BinCmpS(operator, opname string) {
+func (c *internalFuncCompiler) emitI64BinCmpS(operator, opname string) {
 	c.printf("stack[%d] = b2i(int64(stack[%d]) %s int64(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI64BinArithU(operator, opname string) {
+func (c *internalFuncCompiler) emitI64BinArithU(operator, opname string) {
 	c.printf("stack[%d] = stack[%d] %s stack[%d] // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitI64BinArithS(operator, opname string) {
+func (c *internalFuncCompiler) emitI64BinArithS(operator, opname string) {
 	c.printf("stack[%d] = int64(stack[%d]) %s int64(stack[%d]) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
 
-func (c *funcCompiler) emitF32BinCmp(operator, opname string) {
+func (c *internalFuncCompiler) emitF32BinCmp(operator, opname string) {
 	c.printf("stack[%d] = b2i(f32(stack[%d])) %s f32(stack[%d]))) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitF32BinArith(operator, opname string) {
+func (c *internalFuncCompiler) emitF32BinArith(operator, opname string) {
 	c.printf("stack[%d] = u32(f32(stack[%d]) %s f32(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitF32UnFC(funcName, opname string) {
+func (c *internalFuncCompiler) emitF32UnFC(funcName, opname string) {
 	c.printf("stack[%d] = u32(float32(%s(float64(f32(stack[%d]))))) // %s\n",
 		c.stackPtr-1, funcName, c.stackPtr-1, opname)
 }
-func (c *funcCompiler) emitF32BinFC(funcName, opname string) {
+func (c *internalFuncCompiler) emitF32BinFC(funcName, opname string) {
 	c.printf("stack[%d] = u32(float32(%s(float64(f32(stack[%d])), float64(f32(stack[%d]))))) // %s\n",
 		c.stackPtr-2, funcName, c.stackPtr-2, c.stackPtr-1, opname)
 	c.stackPop()
 }
 
-func (c *funcCompiler) emitF64BinCmp(operator, opname string) {
+func (c *internalFuncCompiler) emitF64BinCmp(operator, opname string) {
 	c.printf("stack[%d] = b2i(f64(stack[%d])) %s f64(stack[%d]))) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitF64BinArith(operator, opname string) {
+func (c *internalFuncCompiler) emitF64BinArith(operator, opname string) {
 	c.printf("stack[%d] = u64(f64(stack[%d]) %s f64(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
-func (c *funcCompiler) emitF64UnFC(funcName, opname string) {
+func (c *internalFuncCompiler) emitF64UnFC(funcName, opname string) {
 	c.printf("stack[%d] = u64(%s(f64(stack[%d]))) // %s\n",
 		c.stackPtr-1, funcName, c.stackPtr-1, opname)
 }
-func (c *funcCompiler) emitF64BinFC(funcName, opname string) {
+func (c *internalFuncCompiler) emitF64BinFC(funcName, opname string) {
 	c.printf("stack[%d] = u64(%s(f64(stack[%d]), f64(stack[%d]))) // %s\n",
 		c.stackPtr-2, funcName, c.stackPtr-2, c.stackPtr-1, opname)
 	c.stackPop()
