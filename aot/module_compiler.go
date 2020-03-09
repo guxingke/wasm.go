@@ -4,7 +4,7 @@ import "github.com/zxh0/wasm.go/binary"
 
 type moduleCompiler struct {
 	printer
-	module binary.Module
+	moduleInfo
 }
 
 func (c *moduleCompiler) compile() {
@@ -13,7 +13,7 @@ func (c *moduleCompiler) compile() {
 	c.genUtils()
 	c.println("")
 	m := c.module
-	importedFuncCount := getImportedFuncCount(c.module)
+	importedFuncCount := len(c.importedFuncs)
 	for i, ftIdx := range m.FuncSec {
 		fc := newFuncCompiler(c.module)
 		fIdx := importedFuncCount + i

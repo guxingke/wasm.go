@@ -9,8 +9,8 @@ import (
 
 func Compile(module binary.Module) {
 	c := &moduleCompiler{
-		printer: printer{sb: &strings.Builder{}},
-		module:  module,
+		printer:    printer{sb: &strings.Builder{}},
+		moduleInfo: newModuleInfo(module),
 	}
 	c.compile()
 	fmt.Println(c.sb.String())

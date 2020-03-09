@@ -6,16 +6,6 @@ import (
 	"github.com/zxh0/wasm.go/binary"
 )
 
-func getImportedFuncCount(m binary.Module) int {
-	n := 0
-	for _, imp := range m.ImportSec {
-		if imp.Desc.Tag == binary.ImportTagFunc {
-			n++
-		}
-	}
-	return n
-}
-
 func getFuncNameAndType(m binary.Module, funcIdx int) (string, binary.FuncType) {
 	i := 0
 	for _, imp := range m.ImportSec {
