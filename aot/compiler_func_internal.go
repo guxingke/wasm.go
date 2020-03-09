@@ -9,7 +9,7 @@ import (
 )
 
 type internalFuncCompiler struct {
-	printer
+	funcCompiler
 	moduleInfo moduleInfo
 	stackPtr   int
 	stackMax   int
@@ -23,11 +23,11 @@ type blockInfo struct {
 	stackPtr  int
 }
 
-func newFuncCompiler(moduleInfo moduleInfo) *internalFuncCompiler {
+func newInternalFuncCompiler(moduleInfo moduleInfo) *internalFuncCompiler {
 	return &internalFuncCompiler{
-		printer:    printer{sb: &strings.Builder{}},
-		moduleInfo: moduleInfo,
-		usedLabels: map[int]bool{},
+		funcCompiler: newFuncCompiler(),
+		moduleInfo:   moduleInfo,
+		usedLabels:   map[int]bool{},
 	}
 }
 
@@ -86,21 +86,6 @@ func (c *internalFuncCompiler) compile(idx int,
 	return strings.ReplaceAll(c.sb.String(), "$stackMax", stackMax)
 }
 
-func (c *internalFuncCompiler) genParams(paramCount int) {
-	for i := 0; i < paramCount; i++ {
-		c.printf("p%d", i)
-		if i < paramCount-1 {
-			c.print(", ")
-		} else {
-			c.print(" uint64")
-		}
-	}
-}
-func (c *internalFuncCompiler) genResults(resultCount int) {
-	if resultCount == 1 {
-		c.print(" uint64")
-	}
-}
 func (c *internalFuncCompiler) genLocals(paramCount int) {
 	c.print("\tstack := [$stackMax]uint64{")
 	for i := 0; i < paramCount; i++ {
@@ -580,13 +565,6 @@ func (c *internalFuncCompiler) emitReturn() {
 	panic("TODO")
 }
 func (c *internalFuncCompiler) emitCall(funcIdx int) {
-	if funcIdx >= len(c.moduleInfo.importedFuncs) {
-		c.emitInternalCall(funcIdx)
-	} else {
-		c.emitExternalCall(funcIdx)
-	}
-}
-func (c *internalFuncCompiler) emitInternalCall(funcIdx int) {
 	ft := c.moduleInfo.getFuncType(funcIdx)
 	c.stackPtr -= len(ft.ParamTypes)
 	if len(ft.ResultTypes) > 0 {
@@ -601,46 +579,6 @@ func (c *internalFuncCompiler) emitInternalCall(funcIdx int) {
 	}
 	if len(ft.ResultTypes) > 0 {
 		c.stackPtr++
-	}
-	c.printf(") // call func#%d\n", funcIdx)
-}
-func (c *internalFuncCompiler) emitExternalCall(funcIdx int) {
-	ft := c.moduleInfo.getFuncType(funcIdx)
-	c.stackPtr -= len(ft.ParamTypes)
-	if len(ft.ResultTypes) > 0 {
-		c.printf("r, err := ")
-	} else {
-		c.printf("_, err := ")
-	}
-	c.printf("m.importedFuncs[%d](", funcIdx)
-	for i, vt := range ft.ParamTypes {
-		if i > 0 {
-			c.print(", ")
-		}
-		switch vt {
-		case binary.ValTypeI32:
-			c.printf("int32(stack[%d])", c.stackPtr+i)
-		case binary.ValTypeI64:
-			c.printf("int64(stack[%d])", c.stackPtr+i)
-		case binary.ValTypeF32:
-			c.printf("f32(stack[%d])", c.stackPtr+i)
-		case binary.ValTypeF64:
-			c.printf("f64(stack[%d])", c.stackPtr+i)
-		}
-	}
-	if len(ft.ResultTypes) > 0 {
-		c.stackPtr++
-		c.printf("stack[%d] = ", c.stackPtr)
-		switch ft.ResultTypes[0] {
-		case binary.ValTypeI32:
-			c.printf("uint32(r.(int32))\n")
-		case binary.ValTypeI64:
-			c.printf("uint64(r.(int64))\n")
-		case binary.ValTypeF32:
-			c.printf("u32(r.(float32))\n")
-		case binary.ValTypeF64:
-			c.printf("u64(r.(float64))\n")
-		}
 	}
 	c.printf(") // call func#%d\n", funcIdx)
 }
