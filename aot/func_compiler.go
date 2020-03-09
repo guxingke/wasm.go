@@ -314,7 +314,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 			c.stackPtr-2, c.stackPtr-2, c.stackPtr-1, opname)
 		c.stackPop()
 	case binary.I32ShrS:
-		c.printf("stack[%d] = int32(uint32(stack[%d])) >> (uint32(stack[%d]) %% 32) // %s\n",
+		c.printf("stack[%d] = int32(stack[%d]) >> (uint32(stack[%d]) %% 32) // %s\n",
 			c.stackPtr-2, c.stackPtr-2, c.stackPtr-1, opname)
 		c.stackPop()
 	case binary.I32ShrU:
@@ -450,7 +450,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 		c.printf("stack[%d] = uint64(uint32(math.Trunc(f64(stack[%d])))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.I64ExtendI32S:
-		c.printf("stack[%d] = uint64(int64(int32(uint32(stack[%d])))) // %s\n",
+		c.printf("stack[%d] = uint64(int64(int32(stack[%d]))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.I64ExtendI32U:
 		c.printf("stack[%d] = uint64(uint32(stack[%d])) // %s\n",
@@ -468,7 +468,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 		c.printf("stack[%d] = uint64(math.Trunc(f64(stack[%d]))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.F32ConvertI32S:
-		c.printf("stack[%d] = u32(float32(int32(uint32(stack[%d])))) // %s\n",
+		c.printf("stack[%d] = u32(float32(int32(stack[%d]))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.F32ConvertI32U:
 		c.printf("stack[%d] = u32(float32(uint32(stack[%d]))) // %s\n",
@@ -483,7 +483,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 		c.printf("stack[%d] = u32(float32(f64(stack[%d]))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.F64ConvertI32S:
-		c.printf("stack[%d] = u64(float64(int32(uint32(stack[%d])))) // %s\n",
+		c.printf("stack[%d] = u64(float64(int32(stack[%d]))) // %s\n",
 			c.stackPtr-1, c.stackPtr-1, opname)
 	case binary.F64ConvertI32U:
 		c.printf("stack[%d] = u64(float64(uint32(stack[%d]))) // %s\n",
@@ -634,7 +634,7 @@ func (c *funcCompiler) emitI32BinCmpU(operator, opname string) {
 	c.stackPop()
 }
 func (c *funcCompiler) emitI32BinCmpS(operator, opname string) {
-	c.printf("stack[%d] = b2i(int32(uint32(stack[%d])) %s int32(uint32(stack[%d]))) // %s\n",
+	c.printf("stack[%d] = b2i(int32(stack[%d]) %s int32(stack[%d])) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
@@ -644,7 +644,7 @@ func (c *funcCompiler) emitI32BinArithU(operator, opname string) {
 	c.stackPop()
 }
 func (c *funcCompiler) emitI32BinArithS(operator, opname string) {
-	c.printf("stack[%d] = int32(uint32(stack[%d])) %s int32(uint32(stack[%d])) // %s\n",
+	c.printf("stack[%d] = int32(stack[%d]) %s int32(stack[%d]) // %s\n",
 		c.stackPtr-2, c.stackPtr-2, operator, c.stackPtr-1, opname)
 	c.stackPop()
 }
