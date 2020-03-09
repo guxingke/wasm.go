@@ -8,6 +8,7 @@ type moduleCompiler struct {
 func (c *moduleCompiler) compile() {
 	c.genModule()
 	c.genNew()
+	c.genDummy()
 	c.println("")
 	c.genExternalFuncs()
 	c.genInternalFuncs()
@@ -81,6 +82,15 @@ func Instantiate(iMap instance.Map) instance.Instance {
 	}
 
 	c.println("	return m\n}")
+}
+
+func (c *moduleCompiler) genDummy() {
+	c.print(`
+func dummy() {
+	_ = binary.Decode
+	_ = interpreter.NewInstance
+}
+`)
 }
 
 func (c *moduleCompiler) genExternalFuncs() {
