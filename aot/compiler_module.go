@@ -80,6 +80,7 @@ func (c *moduleCompiler) genExternalFuncs() {
 	for i, imp := range c.importedFuncs {
 		fc := newExternalFuncCompiler()
 		ft := c.module.TypeSec[imp.Desc.FuncType]
+		c.printf("// %s.%s %s\n", imp.Module, imp.Name, ft.GetSignature())
 		c.println(fc.compile(i, ft))
 	}
 }
@@ -91,6 +92,7 @@ func (c *moduleCompiler) genInternalFuncs() {
 		fIdx := importedFuncCount + i
 		ft := c.module.TypeSec[ftIdx]
 		code := c.module.CodeSec[i]
+		c.printf("// %s\n", ft.GetSignature())
 		c.println(fc.compile(fIdx, ft, code))
 	}
 }
