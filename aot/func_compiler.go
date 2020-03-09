@@ -150,20 +150,20 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 			c.stackPtr-1, c.stackPtr-3, c.stackPtr-2, opname)
 		c.stackPtr -= 2
 	case binary.LocalGet:
-		c.printf("stack[%d] = stack[%d] // %s\n",
-			c.stackPush(), instr.Args.(uint32), opname)
+		c.printf("stack[%d] = stack[%d] // %s %d\n",
+			c.stackPush(), instr.Args, opname, instr.Args)
 	case binary.LocalSet:
-		c.printf("stack[%d] = stack[%d] // %s\n",
-			instr.Args.(uint32), c.stackPop(), opname)
+		c.printf("stack[%d] = stack[%d] // %s %d\n",
+			instr.Args, c.stackPop(), opname, instr.Args)
 	case binary.LocalTee:
-		c.printf("stack[%d] = stack[%d] // %s\n",
-			instr.Args.(uint32), c.stackPtr-1, opname)
+		c.printf("stack[%d] = stack[%d] // %s %d\n",
+			instr.Args, c.stackPtr-1, opname, instr.Args)
 	case binary.GlobalGet:
-		c.printf("stack[%d] = m.globals[%d] // %s\n",
-			c.stackPush(), instr.Args.(uint32), opname)
+		c.printf("stack[%d] = m.globals[%d] // %s %d\n",
+			c.stackPush(), instr.Args, opname, instr.Args)
 	case binary.GlobalSet:
-		c.printf("m.globals[%d] = stack[%d] // %s\n",
-			instr.Args.(uint32), c.stackPop(), opname)
+		c.printf("m.globals[%d] = stack[%d] // %s %d\n",
+			instr.Args, c.stackPop(), opname, instr.Args)
 	case binary.I32Load, binary.F32Load:
 		c.emitLoad(instr, opname, "stack[%d] = binary.LittleEndian.Uint32(m.memory[stack[%d] + %d:]) // %s\n")
 	case binary.I64Load, binary.F64Load:
