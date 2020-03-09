@@ -51,7 +51,7 @@ type codeValidator struct {
 }
 
 func validateCode(mv *moduleValidator,
-	code binary.Code, ft binary.FuncType) (err error) {
+	code binary.Code, ft binary.FuncType) (err error, maxOpds int) {
 
 	cv := &codeValidator{
 		mv:        mv,
@@ -70,6 +70,7 @@ func validateCode(mv *moduleValidator,
 	}()
 
 	cv.validateCode(code, ft)
+	maxOpds = cv.maxOpds
 	return
 }
 
