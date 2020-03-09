@@ -12,6 +12,7 @@ func (c *moduleCompiler) compile() {
 	c.println("")
 	c.genExternalFuncs()
 	c.genInternalFuncs()
+	c.genInstanceImpl()
 	c.genUtils()
 }
 
@@ -112,6 +113,20 @@ func (c *moduleCompiler) genInternalFuncs() {
 		c.printf("// %s\n", ft.GetSignature())
 		c.println(fc.compile(fIdx, ft, code))
 	}
+}
+
+func (c *moduleCompiler) genInstanceImpl() {
+	c.println(`
+func (m *aotModule) Get(name string) interface{} {
+	panic("TODO")
+}
+func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {
+	panic("TODO")
+}
+func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
+	panic("TODO")
+}
+`)
 }
 
 func (c *moduleCompiler) genUtils() {
