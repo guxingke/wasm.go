@@ -44,39 +44,39 @@ type aotModule struct {
 }
 
 func (c *moduleCompiler) genNew() {
-	funcCount := len(c.importedFuncs) + len(c.module.FuncSec)
+	funcCount := len(c.importedFuncs)
 	globalCount := len(c.importedGlobals) + len(c.module.GlobalSec)
 	c.printf(`
 func Instantiate(iMap instance.Map) instance.Instance {
 	m := &aotModule{
 		importedFuncs: make([]instance.Function, %d),
-		globals:       make([]uint64, %d),
+		globals:       make([]instance.Global, %d),
 	}
 `, funcCount, globalCount)
 
 	for i, imp := range c.importedFuncs {
-		c.printf("	m.importedFuncs[%d] = iMap[%s].Get(%s).(instance.Function)\n",
-			i, imp.Module, imp.Name)
+		c.printf(`	m.importedFuncs[%d] = iMap["%s"].Get("%s").(instance.Function)%s`,
+			i, imp.Module, imp.Name, "\n")
 	}
 	if len(c.importedTables) > 0 {
-		c.printf("	m.table = iMap[%s].Get(%s).(instance.Table)\n",
-			c.importedTables[0].Module, c.importedTables[0].Name)
+		c.printf(`	m.table = iMap["%s"].Get("%s").(instance.Table)%s`,
+			c.importedTables[0].Module, c.importedTables[0].Name, "\n")
 	} else {
-		c.printf("	m.table = interpreter.NewTable()\n") // TODO
+		c.printf(`	m.table = interpreter.NewTable()%s`, "\n") // TODO
 	}
 	if len(c.importedMemories) > 0 {
-		c.printf("	m.memory = iMap[%s].Get(%s).(instance.Memory)\n",
-			c.importedTables[0].Module, c.importedTables[0].Name)
+		c.printf(`	m.memory = iMap["%s"].Get("%s").(instance.Memory)%s`,
+			c.importedTables[0].Module, c.importedTables[0].Name, "\n")
 	} else {
-		c.printf("	m.memory = interpreter.NewMemory()\n") // TODO
+		c.printf(`	m.memory = interpreter.NewMemory()%s`, "\n") // TODO
 	}
 	for i, imp := range c.importedGlobals {
-		c.printf("	m.globals[%d] = iMap[%s].Get(%s).(instance.Global)\n",
-			i, imp.Module, imp.Name)
+		c.printf(`	m.globals[%d] = iMap["%s"].Get("%s").(instance.Global)%s`,
+			i, imp.Module, imp.Name, "\n")
 	}
 	for i, _ := range c.module.GlobalSec {
-		c.printf("	m.globals[%d] = interpreter.NewGlobal()", // TODO
-			len(c.importedGlobals)+i)
+		c.printf(`	m.globals[%d] = interpreter.NewGlobal()%s`, // TODO
+			len(c.importedGlobals)+i, "\n")
 	}
 
 	c.println("	return m\n}")
