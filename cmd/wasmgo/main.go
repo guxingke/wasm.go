@@ -34,6 +34,7 @@ const (
 // wasmgo    file.wasm # exec
 // wasmgo -d file.wasm # dump
 // wasmgo -c file.wasm # check
+// wasmgo -a file.wasm # aot
 func main() {
 	app := &cli.App{
 		Version:   "0.1.0",
