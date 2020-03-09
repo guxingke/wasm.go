@@ -139,7 +139,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 	case binary.Return:
 		c.emitReturn()
 	case binary.Call:
-		c.emitCall(int(instr.Args.(uint32)), opname)
+		c.emitCall(int(instr.Args.(uint32)))
 	case binary.CallIndirect:
 		c.emitCallIndirect()
 	case binary.Drop:
@@ -579,18 +579,40 @@ func (c *funcCompiler) emitBrTable() {
 func (c *funcCompiler) emitReturn() {
 	panic("TODO")
 }
-func (c *funcCompiler) emitCall(funcIdx int, opname string) {
+func (c *funcCompiler) emitCall(funcIdx int) {
+	if funcIdx >= len(c.moduleInfo.importedFuncs) {
+		c.emitInternalCall(funcIdx)
+	} else {
+		c.emitExternalCall(funcIdx)
+	}
+}
+func (c *funcCompiler) emitInternalCall(funcIdx int) {
 	ft := c.moduleInfo.getFuncType(funcIdx)
-
 	c.stackPtr -= len(ft.ParamTypes)
 	if len(ft.ResultTypes) > 0 {
 		c.printf("stack[%d] = ", c.stackPtr)
 	}
-	if funcIdx < len(c.moduleInfo.importedFuncs) {
-		c.printf("m.importedFuncs[%d](", funcIdx)
-	} else {
-		c.printf("m.f%d(", funcIdx)
+	c.printf("m.f%d(", funcIdx)
+	for i := range ft.ParamTypes {
+		if i > 0 {
+			c.print(", ")
+		}
+		c.printf("stack[%d]", c.stackPtr+i)
 	}
+	if len(ft.ResultTypes) > 0 {
+		c.stackPtr++
+	}
+	c.printf(") // call func#%d\n", funcIdx)
+}
+func (c *funcCompiler) emitExternalCall(funcIdx int) {
+	ft := c.moduleInfo.getFuncType(funcIdx)
+	c.stackPtr -= len(ft.ParamTypes)
+	if len(ft.ResultTypes) > 0 {
+		c.printf("r, err := ")
+	} else {
+		c.printf("_, err := ")
+	}
+	c.printf("m.importedFuncs[%d](", funcIdx)
 	for i, vt := range ft.ParamTypes {
 		if i > 0 {
 			c.print(", ")
@@ -608,8 +630,19 @@ func (c *funcCompiler) emitCall(funcIdx int, opname string) {
 	}
 	if len(ft.ResultTypes) > 0 {
 		c.stackPtr++
+		c.printf("stack[%d] = ", c.stackPtr)
+		switch ft.ResultTypes[0] {
+		case binary.ValTypeI32:
+			c.printf("uint32(r.(int32))\n")
+		case binary.ValTypeI64:
+			c.printf("uint64(r.(int64))\n")
+		case binary.ValTypeF32:
+			c.printf("u32(r.(float32))\n")
+		case binary.ValTypeF64:
+			c.printf("u64(r.(float64))\n")
+		}
 	}
-	c.printf(") // %s func#%d\n", opname, funcIdx)
+	c.printf(") // call func#%d\n", funcIdx)
 }
 func (c *funcCompiler) emitCallIndirect() {
 	panic("TODO")
