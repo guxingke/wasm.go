@@ -78,23 +78,16 @@ func Instantiate(iMap instance.Map) instance.Instance {
 
 func (c *moduleCompiler) genExternalFuncs() {
 	for i, imp := range c.importedFuncs {
+		fc := newExternalFuncCompiler()
 		ft := c.module.TypeSec[imp.Desc.FuncType]
-
-		fc := newFuncCompiler(c.moduleInfo)
-		fc.printf("func (m *aotModule) f%d(", i)
-		fc.genParams(len(ft.ParamTypes))
-		fc.print(")")
-		fc.genResults(len(ft.ResultTypes))
-		fc.print(" {\n")
-		fc.printf("	m.importedFuncs[%d]()", i)
-		fc.println("}")
+		c.println(fc.compile(i, ft))
 	}
 }
 
 func (c *moduleCompiler) genInternalFuncs() {
 	importedFuncCount := len(c.importedFuncs)
 	for i, ftIdx := range c.module.FuncSec {
-		fc := newFuncCompiler(c.moduleInfo)
+		fc := newInternalFuncCompiler(c.moduleInfo)
 		fIdx := importedFuncCount + i
 		ft := c.module.TypeSec[ftIdx]
 		code := c.module.CodeSec[i]
