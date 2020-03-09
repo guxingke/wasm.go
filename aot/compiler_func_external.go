@@ -27,7 +27,7 @@ func (c *externalFuncCompiler) genFuncBody(idx int, ft binary.FuncType) {
 	} else {
 		c.print("	_, err := ")
 	}
-	c.printf("m.importedFuncs[%d](", idx)
+	c.printf("m.importedFuncs[%d].Call(", idx)
 	for i, vt := range ft.ParamTypes {
 		if i > 0 {
 			c.print(", ")
