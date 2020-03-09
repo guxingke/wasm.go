@@ -46,6 +46,7 @@ type codeValidator struct {
 	ctrls      ctrlStack
 	mv         *moduleValidator
 	localCount int
+	opdMax     int
 	instrPath  map[int]string // depth -> opname
 }
 
@@ -113,9 +114,6 @@ func (cv *codeValidator) popOpd() valType {
 		}
 		cv.error("type mismatch") // TODO
 	}
-	return cv.popOpd0()
-}
-func (cv *codeValidator) popOpd0() valType {
 	r := cv.opds[len(cv.opds)-1]
 	cv.opds = cv.opds[:len(cv.opds)-1]
 	return r
