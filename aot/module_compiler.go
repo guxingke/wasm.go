@@ -9,7 +9,8 @@ func (c *moduleCompiler) compile() {
 	c.genModule()
 	c.genNew()
 	c.println("")
-	c.genFuncs()
+	c.genExternalFuncs()
+	c.genInternalFuncs()
 	c.genUtils()
 }
 
@@ -75,7 +76,22 @@ func Instantiate(iMap instance.Map) instance.Instance {
 	c.println("	return m\n}")
 }
 
-func (c *moduleCompiler) genFuncs() {
+func (c *moduleCompiler) genExternalFuncs() {
+	for i, imp := range c.importedFuncs {
+		ft := c.module.TypeSec[imp.Desc.FuncType]
+
+		fc := newFuncCompiler(c.moduleInfo)
+		fc.printf("func (m *aotModule) f%d(", i)
+		fc.genParams(len(ft.ParamTypes))
+		fc.print(")")
+		fc.genResults(len(ft.ResultTypes))
+		fc.print(" {\n")
+		fc.printf("	m.importedFuncs[%d]()", i)
+		fc.println("}")
+	}
+}
+
+func (c *moduleCompiler) genInternalFuncs() {
 	importedFuncCount := len(c.importedFuncs)
 	for i, ftIdx := range c.module.FuncSec {
 		fc := newFuncCompiler(c.moduleInfo)
