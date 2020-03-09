@@ -10,7 +10,7 @@ import (
 
 type funcCompiler struct {
 	printer
-	module     binary.Module
+	moduleInfo moduleInfo
 	stackPtr   int
 	stackMax   int
 	blocks     []blockInfo
@@ -23,10 +23,10 @@ type blockInfo struct {
 	stackPtr  int
 }
 
-func newFuncCompiler(module binary.Module) *funcCompiler {
+func newFuncCompiler(moduleInfo moduleInfo) *funcCompiler {
 	return &funcCompiler{
 		printer:    printer{sb: &strings.Builder{}},
-		module:     module,
+		moduleInfo: moduleInfo,
 		usedLabels: map[int]bool{},
 	}
 }
@@ -580,7 +580,7 @@ func (c *funcCompiler) emitReturn() {
 	panic("TODO")
 }
 func (c *funcCompiler) emitCall(funcIdx uint32, opname string) {
-	name, ft := getFuncNameAndType(c.module, int(funcIdx))
+	name, ft := c.moduleInfo.getFuncNameAndType(int(funcIdx))
 	paramCount := len(ft.ParamTypes)
 
 	c.stackPtr -= paramCount

@@ -76,13 +76,12 @@ func Instantiate(iMap instance.Map) instance.Instance {
 }
 
 func (c *moduleCompiler) genFuncs() {
-	m := c.module
 	importedFuncCount := len(c.importedFuncs)
-	for i, ftIdx := range m.FuncSec {
-		fc := newFuncCompiler(m)
+	for i, ftIdx := range c.module.FuncSec {
+		fc := newFuncCompiler(c.moduleInfo)
 		fIdx := importedFuncCount + i
-		ft := m.TypeSec[ftIdx]
-		code := m.CodeSec[i]
+		ft := c.module.TypeSec[ftIdx]
+		code := c.module.CodeSec[i]
 		c.println(fc.compile(fIdx, ft, code))
 	}
 }
