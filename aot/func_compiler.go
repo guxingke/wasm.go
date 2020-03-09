@@ -139,7 +139,7 @@ func (c *funcCompiler) emitInstr(instr binary.Instruction) {
 	case binary.Return:
 		c.emitReturn()
 	case binary.Call:
-		c.emitCall(instr.Args.(uint32), opname)
+		c.emitCall(int(instr.Args.(uint32)), opname)
 	case binary.CallIndirect:
 		c.emitCallIndirect()
 	case binary.Drop:
@@ -579,15 +579,19 @@ func (c *funcCompiler) emitBrTable() {
 func (c *funcCompiler) emitReturn() {
 	panic("TODO")
 }
-func (c *funcCompiler) emitCall(funcIdx uint32, opname string) {
-	name, ft := c.moduleInfo.getFuncNameAndType(int(funcIdx))
+func (c *funcCompiler) emitCall(funcIdx int, opname string) {
+	ft := c.moduleInfo.getFuncType(funcIdx)
 	paramCount := len(ft.ParamTypes)
 
 	c.stackPtr -= paramCount
 	if len(ft.ResultTypes) > 0 {
 		c.printf("stack[%d] = ", c.stackPtr)
 	}
-	c.printf("m.f%d(", funcIdx)
+	if funcIdx < len(c.moduleInfo.importedFuncs) {
+		c.printf("m.importedFuncs[%d](", funcIdx)
+	} else {
+		c.printf("m.f%d(", funcIdx)
+	}
 	for i := 0; i < paramCount; i++ {
 		if i > 0 {
 			c.print(", ")
@@ -597,7 +601,7 @@ func (c *funcCompiler) emitCall(funcIdx uint32, opname string) {
 	if len(ft.ResultTypes) > 0 {
 		c.stackPtr++
 	}
-	c.printf(") // %s %s\n", opname, name)
+	c.printf(") // %s func#%d\n", opname, funcIdx)
 }
 func (c *funcCompiler) emitCallIndirect() {
 	panic("TODO")

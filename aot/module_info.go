@@ -1,7 +1,6 @@
 package aot
 
 import (
-	"fmt"
 	"github.com/zxh0/wasm.go/binary"
 )
 
@@ -32,16 +31,14 @@ func newModuleInfo(module binary.Module) moduleInfo {
 	return info
 }
 
-func (mi moduleInfo) getFuncNameAndType(funcIdx int) (string, binary.FuncType) {
+func (mi moduleInfo) getFuncType(funcIdx int) binary.FuncType {
+	var ftIdx uint32
 	if funcIdx < len(mi.importedFuncs) {
-		imp := mi.importedFuncs[funcIdx]
-		ftIdx := imp.Desc.FuncType
-		return imp.Name, mi.module.TypeSec[ftIdx]
+		ftIdx = mi.importedFuncs[funcIdx].Desc.FuncType
+	} else {
+		ftIdx = mi.module.FuncSec[funcIdx-len(mi.importedFuncs)]
 	}
-
-	ftIdx := mi.module.FuncSec[funcIdx-len(mi.importedFuncs)]
-	name := fmt.Sprintf("func#%d", funcIdx)
-	return name, mi.module.TypeSec[ftIdx]
+	return mi.module.TypeSec[ftIdx]
 }
 
 func getMemPageMin(m binary.Module) int {
