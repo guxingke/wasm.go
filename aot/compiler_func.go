@@ -1,13 +1,11 @@
 package aot
 
-import "strings"
-
 type funcCompiler struct {
 	printer
 }
 
 func newFuncCompiler() funcCompiler {
-	return funcCompiler{printer{sb: &strings.Builder{}}}
+	return funcCompiler{newPrinter()}
 }
 
 func (c *funcCompiler) genParams(paramCount int) {
