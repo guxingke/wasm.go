@@ -8,17 +8,9 @@ type moduleCompiler struct {
 func (c *moduleCompiler) compile() {
 	c.genModule()
 	c.genNew()
-	c.genUtils()
 	c.println("")
-	m := c.module
-	importedFuncCount := len(c.importedFuncs)
-	for i, ftIdx := range m.FuncSec {
-		fc := newFuncCompiler(c.module)
-		fIdx := importedFuncCount + i
-		ft := m.TypeSec[ftIdx]
-		code := m.CodeSec[i]
-		c.println(fc.compile(fIdx, ft, code))
-	}
+	c.genFuncs()
+	c.genUtils()
 }
 
 func (c *moduleCompiler) genModule() {
@@ -83,9 +75,20 @@ func Instantiate(iMap instance.Map) instance.Instance {
 	c.println("	return m\n}")
 }
 
+func (c *moduleCompiler) genFuncs() {
+	m := c.module
+	importedFuncCount := len(c.importedFuncs)
+	for i, ftIdx := range m.FuncSec {
+		fc := newFuncCompiler(m)
+		fIdx := importedFuncCount + i
+		ft := m.TypeSec[ftIdx]
+		code := m.CodeSec[i]
+		c.println(fc.compile(fIdx, ft, code))
+	}
+}
+
 func (c *moduleCompiler) genUtils() {
-	c.print(`
-// utils
+	c.print(`// utils
 func b2i(b bool) uint64 {
 	if b { return 1 } else { return 0 }
 }
