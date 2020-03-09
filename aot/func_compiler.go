@@ -10,10 +10,11 @@ import (
 
 type funcCompiler struct {
 	printer
-	module   binary.Module
-	stackPtr int
-	stackMax int
-	blocks   []blockInfo
+	module     binary.Module
+	stackPtr   int
+	stackMax   int
+	blocks     []blockInfo
+	usedLabels map[int]bool
 }
 
 type blockInfo struct {
@@ -24,8 +25,9 @@ type blockInfo struct {
 
 func newFuncCompiler(module binary.Module) *funcCompiler {
 	return &funcCompiler{
-		printer: printer{sb: &strings.Builder{}},
-		module:  module,
+		printer:    printer{sb: &strings.Builder{}},
+		module:     module,
+		usedLabels: map[int]bool{},
 	}
 }
 
@@ -517,7 +519,7 @@ l0: for {
 func (c *funcCompiler) emitBlock(expr []binary.Instruction, isLoop, hasResult bool) {
 	c.enterBlock(isLoop, hasResult)
 	c.printIndents()
-	c.printf("_l%d: for {\n", c.blockDepth()-1)
+	c.printf("/*_l%d:*/ for {\n", c.blockDepth()-1)
 	for _, instr := range expr {
 		c.emitInstr(instr)
 	}
@@ -552,6 +554,7 @@ func (c *funcCompiler) emitIf() {
 }
 func (c *funcCompiler) emitBr(labelIdx uint32) {
 	n := len(c.blocks) - int(labelIdx) - 1
+	c.usedLabels[n] = true
 	if c.blocks[n].isLoop {
 		c.printf("continue _l%d // br\n", n)
 	} else {
@@ -560,6 +563,7 @@ func (c *funcCompiler) emitBr(labelIdx uint32) {
 }
 func (c *funcCompiler) emitBrIf(labelIdx uint32) {
 	n := len(c.blocks) - int(labelIdx) - 1
+	c.usedLabels[n] = true
 	ret := "" // TODO: return
 	br := "break"
 	if c.blocks[n].isLoop {

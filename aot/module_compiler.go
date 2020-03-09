@@ -1,7 +1,5 @@
 package aot
 
-import "github.com/zxh0/wasm.go/binary"
-
 type moduleCompiler struct {
 	printer
 	moduleInfo
@@ -30,26 +28,58 @@ package main
 
 import (
 	"math"
+
+	"github.com/zxh0/wasm.go/binary"
+	"github.com/zxh0/wasm.go/instance"
+	"github.com/zxh0/wasm.go/interpreter"
 )
 
 type aotModule struct {
-	memory  []byte
-	globals []uint64
+	importedFuncs []instance.Function
+	table         instance.Table
+	memory        instance.Memory
+	globals       []instance.Global
 }
 `)
 }
 
 func (c *moduleCompiler) genNew() {
-	memPageMin := getMemPageMin(c.module)
-	globalCount := len(c.module.GlobalSec)
+	funcCount := len(c.importedFuncs) + len(c.module.FuncSec)
+	globalCount := len(c.importedGlobals) + len(c.module.GlobalSec)
 	c.printf(`
-func New() *aotModule {
-	return &aotModule{
-		memory:  make([]byte, %d),
-		globals: make([]uint64, %d),
+func Instantiate(iMap instance.Map) instance.Instance {
+	m := &aotModule{
+		importedFuncs: make([]instance.Function, %d),
+		globals:       make([]uint64, %d),
 	}
-}
-`, memPageMin*binary.PageSize, globalCount)
+`, funcCount, globalCount)
+
+	for i, imp := range c.importedFuncs {
+		c.printf("	m.importedFuncs[%d] = iMap[%s].Get(%s).(instance.Function)\n",
+			i, imp.Module, imp.Name)
+	}
+	if len(c.importedTables) > 0 {
+		c.printf("	m.table = iMap[%s].Get(%s).(instance.Table)\n",
+			c.importedTables[0].Module, c.importedTables[0].Name)
+	} else {
+		c.printf("	m.table = interpreter.NewTable()\n") // TODO
+	}
+	if len(c.importedMemories) > 0 {
+		c.printf("	m.memory = iMap[%s].Get(%s).(instance.Memory)\n",
+			c.importedTables[0].Module, c.importedTables[0].Name)
+	} else {
+		c.printf("	m.memory = interpreter.NewMemory()\n") // TODO
+	}
+	for i, imp := range c.importedGlobals {
+		c.printf("	m.globals[%d] = iMap[%s].Get(%s).(instance.Global)\n",
+			i, imp.Module, imp.Name)
+	}
+	for i, _ := range c.module.GlobalSec {
+		c.printf("	m.globals[%d] = interpreter.NewGlobal()", // TODO
+			len(c.importedGlobals)+i)
+	}
+
+	c.println("	return m\n}")
 }
 
 func (c *moduleCompiler) genUtils() {
