@@ -28,6 +28,10 @@ func (c *moduleCompiler) genModule() {
 
 package main
 
+import (
+	"math"
+)
+
 type aotModule struct {
 	memory  []byte
 	globals []uint64
@@ -63,7 +67,7 @@ func u32(f float32) uint64 {
 func f64(i uint64) float64 {
 	return math.Float64frombits(i)
 }
-func u64(f float32) uint64 {
+func u64(f float64) uint64 {
 	return math.Float64bits(f)
 }
 `)
