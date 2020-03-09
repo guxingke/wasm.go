@@ -55,8 +55,9 @@ func Instantiate(iMap instance.Map) instance.Instance {
 `, funcCount, globalCount)
 
 	for i, imp := range c.importedFuncs {
-		c.printf(`	m.importedFuncs[%d] = iMap["%s"].Get("%s").(instance.Function)%s`,
-			i, imp.Module, imp.Name, "\n")
+		ft := c.module.TypeSec[imp.Desc.FuncType]
+		c.printf(`	m.importedFuncs[%d] = iMap["%s"].Get("%s").(instance.Function) // %s%s`,
+			i, imp.Module, imp.Name, ft.GetSignature(), "\n")
 	}
 	if len(c.importedTables) > 0 {
 		c.printf(`	m.table = iMap["%s"].Get("%s").(instance.Table)%s`,
