@@ -11,6 +11,7 @@ import (
 	"github.com/zxh0/wasm.go/binary"
 	"github.com/zxh0/wasm.go/instance"
 	"github.com/zxh0/wasm.go/interpreter"
+	"github.com/zxh0/wasm.go/validator"
 )
 
 const appHelpTemplate = `NAME:
@@ -31,10 +32,11 @@ const (
 	flagNameExec  = "exec"
 )
 
-// wasmgo    file.wasm # exec
-// wasmgo -d file.wasm # dump
-// wasmgo -c file.wasm # check
-// wasmgo -a file.wasm # aot
+// wasmgo        file.wasm # exec
+// wasmgo -dump  file.wasm # dump
+// wasmgo -check file.wasm # check
+// wasmgo -aot   file.wasm # aot
+// wasmgo -test  file.wast # test
 func main() {
 	app := &cli.App{
 		Version:   "0.1.0",
@@ -76,6 +78,7 @@ func boolFlag(name, usage string, value bool) cli.Flag {
 }
 
 func aotWasm(filename string) error {
+	fmt.Println("AOT " + filename)
 	module, err := binary.DecodeFile(filename)
 	if err != nil {
 		return err
@@ -87,7 +90,13 @@ func aotWasm(filename string) error {
 
 func checkWasm(filename string) error {
 	fmt.Println("check " + filename)
-	return nil
+	module, err := binary.DecodeFile(filename)
+	if err != nil {
+		return err
+	}
+
+	err, _ = validator.Validate(module)
+	return err
 }
 
 func dumpWasm(filename string) error {
