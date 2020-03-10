@@ -9,6 +9,7 @@ import (
 
 type NewFn = func(instance.Map) instance.Instance
 
+// load compiled module
 func Load(filename string) (instance.Instance, error) {
 	p, err := plugin.Open(filename)
 	if err != nil {
