@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/zxh0/wasm.go/binary"
 	"github.com/zxh0/wasm.go/instance"
 	"github.com/zxh0/wasm.go/interpreter"
+	"github.com/zxh0/wasm.go/text"
 	"github.com/zxh0/wasm.go/validator"
 )
 
@@ -26,27 +28,32 @@ OPTIONS:
 `
 
 const (
-	flagNameAOT   = "aot"
-	flagNameCheck = "check"
-	flagNameDump  = "dump"
-	flagNameExec  = "exec"
+	flagNameAOT     = "aot"
+	flagNameCheck   = "check"
+	flagNameDump    = "dump"
+	flagNameExec    = "exec"
+	flagNameCompile = "compile"
+	flagNameTest    = "test"
 )
 
-// wasmgo        file.wasm # exec
-// wasmgo -dump  file.wasm # dump
-// wasmgo -check file.wasm # check
-// wasmgo -aot   file.wasm # aot
-// wasmgo -test  file.wast # test
+// wasmgo             file.wasm # exec
+// wasmgo -A|-aot     file.wasm
+// wasmgo -C|-check   file.wasm
+// wasmgo -D|-dump    file.wasm
+// wasmgo -K|-compile file.wat
+// wasmgo -T|-test    file.wast
 func main() {
 	app := &cli.App{
 		Version:   "0.1.0",
 		Usage:     "Wasm.go CLI",
 		ArgsUsage: "[file]",
 		Flags: []cli.Flag{
-			boolFlag(flagNameAOT, "aot compile wasm file", false),
-			boolFlag(flagNameCheck, "check wasm file", false),
-			boolFlag(flagNameDump, "dump wasm file", false),
-			boolFlag(flagNameExec, "execute wasm file", true),
+			boolFlag(flagNameAOT, "A", "aot compile .wasm file", false),
+			boolFlag(flagNameCheck, "C", "check .wasm file", false),
+			boolFlag(flagNameDump, "D", "dump .wasm file", false),
+			boolFlag(flagNameExec, "E", "execute .wasm file", true),
+			boolFlag(flagNameCompile, "K", "compile .wat file", false),
+			boolFlag(flagNameTest, "T", "test .wast file", false),
 		},
 		CustomAppHelpTemplate: appHelpTemplate,
 		Action: func(ctx *cli.Context) error {
@@ -57,6 +64,10 @@ func main() {
 				return checkWasm(filename)
 			} else if ctx.Bool(flagNameDump) {
 				return dumpWasm(filename)
+			} else if ctx.Bool(flagNameCompile) {
+				return compileWat(filename)
+			} else if ctx.Bool(flagNameTest) {
+				return testWast(filename)
 			} else {
 				return execWasm(filename)
 			}
@@ -68,10 +79,10 @@ func main() {
 	}
 }
 
-func boolFlag(name, usage string, value bool) cli.Flag {
+func boolFlag(name, alias, usage string, value bool) cli.Flag {
 	return &cli.BoolFlag{
 		Name:    name,
-		Aliases: []string{usage[0:1]},
+		Aliases: []string{alias},
 		Usage:   usage,
 		Value:   value,
 	}
@@ -133,4 +144,28 @@ func execWasm(filename string) error {
 	//ni.mem, _ = vm.GetMemory("")
 	_, err = vm.CallFunc("main")
 	return err
+}
+
+func compileWat(filename string) error {
+	m, err := text.CompileModuleFile(filename)
+	if err != nil {
+		return err
+	}
+
+	// TODO
+	bytes, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(bytes))
+	return nil
+}
+
+func testWast(filename string) error {
+	s, err := text.CompileScriptFile(filename)
+	if err != nil {
+		return err
+	}
+	return newWastTester(s).test()
 }
