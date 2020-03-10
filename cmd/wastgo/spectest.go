@@ -20,7 +20,7 @@ func newSpecTestInstance() instance.Instance {
 		return nil, nil
 	}
 
-	specTest := newNativeInstance()
+	specTest := instance.NewNativeInstance()
 	specTest.RegisterNoResultsFunc("print", _print)
 	specTest.RegisterNoResultsFunc("print_i32", _print, binary.ValTypeI32)
 	specTest.RegisterNoResultsFunc("print_i64", _print, binary.ValTypeI64)

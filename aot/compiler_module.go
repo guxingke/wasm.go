@@ -79,7 +79,7 @@ func Instantiate(iMap instance.Map) instance.Instance {
 		c.printf("	gt := binary.GlobalType{ValType: %d, Mut:%d}\n",
 			g.Type.ValType, g.Type.Mut)
 		c.printf("	m.globals[%d] = interpreter.NewGlobal()\n",
-			len(c.importedGlobals)+i, "\n")
+			len(c.importedGlobals)+i)
 	}
 
 	c.println("	return m\n}")
