@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"plugin"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 	"github.com/zxh0/wasm.go/aot"
@@ -68,8 +70,12 @@ func main() {
 				return compileWat(filename)
 			} else if ctx.Bool(flagNameTest) {
 				return testWast(filename)
-			} else {
+			} else if strings.HasSuffix( filename, ".wasm") {
 				return execWasm(filename)
+			} else if strings.HasSuffix(filename, ".so") {
+				return testAOT(filename)
+			} else {
+				return nil
 			}
 		},
 	}
@@ -168,4 +174,11 @@ func testWast(filename string) error {
 		return err
 	}
 	return newWastTester(s).test()
+}
+
+func testAOT(filename string) error {
+	p, err := plugin.Open("plugin_name.so")
+	if err != nil {
+		return err
+	}
 }
