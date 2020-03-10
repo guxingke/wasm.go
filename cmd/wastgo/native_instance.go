@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/zxh0/wasm.go/binary"
 	"github.com/zxh0/wasm.go/instance"
-	"github.com/zxh0/wasm.go/interpreter"
 )
 
 var _ instance.Instance = (*nativeInstance)(nil)
@@ -32,15 +31,9 @@ func (n *nativeInstance) RegisterNoResultsFunc(name string,
 	}
 	n.RegisterFunc(name, ft, f)
 }
-func (n *nativeInstance) RegisterGlobal(name string,
-	vt binary.ValType, mut bool, val uint64) {
-	n.exported[name] = interpreter.NewGlobal(vt, mut, val)
-}
-func (n *nativeInstance) RegisterTable(name string, min, max uint32) {
-	n.exported[name] = interpreter.NewTable(min, max)
-}
-func (n *nativeInstance) RegisterMem(name string, min, max uint32) {
-	n.exported[name] = interpreter.NewMemory(min, max)
+
+func (n *nativeInstance) Register(name string, x interface{}) {
+	n.exported[name] = x
 }
 
 func (n *nativeInstance) Get(name string) interface{} {
