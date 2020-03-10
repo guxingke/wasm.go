@@ -1,5 +1,7 @@
 package aot
 
+import "github.com/zxh0/wasm.go/binary"
+
 type moduleCompiler struct {
 	printer
 	moduleInfo
@@ -12,6 +14,7 @@ func (c *moduleCompiler) compile() {
 	c.println("")
 	c.genExternalFuncs()
 	c.genInternalFuncs()
+	c.genExportedFuncs()
 	c.genInstanceImpl()
 	c.genUtils()
 }
@@ -112,6 +115,18 @@ func (c *moduleCompiler) genInternalFuncs() {
 		code := c.module.CodeSec[i]
 		c.printf("// %s\n", ft.GetSignature())
 		c.println(fc.compile(fIdx, ft, code))
+	}
+}
+
+func (c *moduleCompiler) genExportedFuncs() {
+	for i, exp := range c.module.ExportSec {
+		if exp.Desc.Tag == binary.ExportTagFunc {
+			fc := newExportedFuncCompiler(len(c.importedFuncs))
+			fIdx := int(exp.Desc.Idx)
+			ft := c.getFuncType(fIdx)
+			c.printf("// %s %s\n", exp.Name, ft.GetSignature())
+			c.println(fc.compile(i, fIdx, ft))
+		}
 	}
 }
 

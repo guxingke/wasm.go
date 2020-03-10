@@ -23,7 +23,7 @@ func Load(filename string, iMap instance.Map) (instance.Instance, error) {
 
 	newFn, ok := f.(NewFn)
 	if !ok {
-		msg := "'Instantiate' is not 'func(instance.Map) instance.Instance'"
+		msg := "'Instantiate' is not 'func(instance.Map) (instance.Instance, error)'"
 		return nil, errors.New(msg)
 	}
 
