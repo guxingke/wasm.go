@@ -8,18 +8,9 @@ import (
 	"github.com/zxh0/wasm.go/interpreter"
 )
 
-const DEBUG = false
+const Debug = false
 
 func newSpecTestInstance() instance.Instance {
-	_print := func(args ...interface{}) (interface{}, error) {
-		if DEBUG {
-			for _, arg := range args {
-				fmt.Printf("spectest> %v\n", arg)
-			}
-		}
-		return nil, nil
-	}
-
 	specTest := instance.NewNativeInstance()
 	specTest.RegisterFunc("print", _print, binary.NoVal)
 	specTest.RegisterFunc("print_i32", _print, binary.ValTypeI32, binary.NoVal)
@@ -34,4 +25,13 @@ func newSpecTestInstance() instance.Instance {
 	specTest.Register("table", interpreter.NewTable(10, 20))
 	specTest.Register("memory", interpreter.NewMemory(1, 2))
 	return specTest
+}
+
+func _print(args ...interface{}) (interface{}, error) {
+	if Debug {
+		for _, arg := range args {
+			fmt.Printf("spectest> %v\n", arg)
+		}
+	}
+	return nil, nil
 }
