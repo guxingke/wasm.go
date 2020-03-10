@@ -179,11 +179,12 @@ func testWast(filename string) error {
 
 func execAOT(filename string) error {
 	fmt.Println("exec " + filename)
-	_, err := aot.Load(filename)
+	iMap := map[string]instance.Instance{"env": newAotEnv()}
+	i, err := aot.Load(filename, iMap)
 	if err != nil {
 		return err
 	}
 
-	// TODO
-	return nil
+	_, err = i.CallFunc("main")
+	return err
 }
