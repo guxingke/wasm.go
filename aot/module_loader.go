@@ -7,7 +7,7 @@ import (
 	"github.com/zxh0/wasm.go/instance"
 )
 
-type NewFn = func(instance.Map) instance.Instance
+type NewFn = func(instance.Map) (instance.Instance, error)
 
 // load compiled module
 func Load(filename string) (instance.Instance, error) {
@@ -27,7 +27,5 @@ func Load(filename string) (instance.Instance, error) {
 		return nil, errors.New(msg)
 	}
 
-	i := newFn(nil) // TODO
-
-	return i, nil
+	return newFn(nil) // TODO
 }

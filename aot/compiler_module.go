@@ -42,7 +42,7 @@ func (c *moduleCompiler) genNew() {
 	funcCount := len(c.importedFuncs)
 	globalCount := len(c.importedGlobals) + len(c.module.GlobalSec)
 	c.printf(`
-func Instantiate(iMap instance.Map) instance.Instance {
+func Instantiate(iMap instance.Map) (instance.Instance, error) {
 	m := &aotModule{
 		importedFuncs: make([]instance.Function, %d),
 		globals:       make([]instance.Global, %d),
@@ -82,7 +82,7 @@ func Instantiate(iMap instance.Map) instance.Instance {
 			len(c.importedGlobals)+i)
 	}
 
-	c.println("	return m\n}")
+	c.println("	return m, nil // TODO\n}")
 }
 
 func (c *moduleCompiler) genDummy() {

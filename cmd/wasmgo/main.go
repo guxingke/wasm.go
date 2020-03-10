@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"plugin"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -95,7 +94,7 @@ func boolFlag(name, alias, usage string, value bool) cli.Flag {
 }
 
 func aotWasm(filename string) error {
-	fmt.Println("AOT " + filename)
+	//fmt.Println("AOT " + filename)
 	module, err := binary.DecodeFile(filename)
 	if err != nil {
 		return err
@@ -180,5 +179,11 @@ func testWast(filename string) error {
 
 func execAOT(filename string) error {
 	fmt.Println("exec " + filename)
+	_, err := aot.Load(filename)
+	if err != nil {
+		return err
+	}
 
+	// TODO
+	return nil
 }
