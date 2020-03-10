@@ -15,7 +15,9 @@ func (c *moduleCompiler) compile() {
 	c.genExternalFuncs()
 	c.genInternalFuncs()
 	c.genExportedFuncs()
-	c.genInstanceImpl()
+	c.genGet()
+	c.genCallFunc()
+	c.genGetGlobalVal()
 	c.genUtils()
 }
 
@@ -130,14 +132,22 @@ func (c *moduleCompiler) genExportedFuncs() {
 	}
 }
 
-func (c *moduleCompiler) genInstanceImpl() {
-	c.println(`
+func (c *moduleCompiler) genGet() {
+	c.print(`
 func (m *aotModule) Get(name string) interface{} {
 	panic("TODO")
 }
+`)
+}
+func (c *moduleCompiler) genCallFunc() {
+	c.print(`
 func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {
 	panic("TODO")
 }
+`)
+}
+func (c *moduleCompiler) genGetGlobalVal() {
+	c.print(`
 func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
 	panic("TODO")
 }
@@ -145,7 +155,8 @@ func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
 }
 
 func (c *moduleCompiler) genUtils() {
-	c.print(`// utils
+	c.print(`
+// utils
 func b2i(b bool) uint64 { if b { return 1 } else { return 0 } }
 func f32(i uint64) float32 { return math.Float32frombits(uint32(i)) }
 func u32(f float32) uint64 { return uint64(math.Float32bits(f)) }

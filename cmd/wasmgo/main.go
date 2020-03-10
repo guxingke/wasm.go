@@ -139,8 +139,7 @@ func execWasm(filename string) error {
 		return err
 	}
 
-	ni := &NativeInstance{}
-	mm := map[string]instance.Instance{"env": ni}
+	mm := map[string]instance.Instance{"env": newTestEnv()}
 	vm, err := interpreter.NewInstance(module, mm)
 	if err != nil {
 		return err
@@ -179,7 +178,7 @@ func testWast(filename string) error {
 
 func execAOT(filename string) error {
 	fmt.Println("exec " + filename)
-	iMap := map[string]instance.Instance{"env": newAotEnv()}
+	iMap := map[string]instance.Instance{"env": newTestEnv()}
 	i, err := aot.Load(filename, iMap)
 	if err != nil {
 		return err
