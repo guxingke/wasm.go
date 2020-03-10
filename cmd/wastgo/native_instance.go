@@ -52,14 +52,14 @@ func (n *nativeInstance) RegisterMem(name string, min, max uint32) {
 	n.exported[name] = interpreter.NewMemory(mt)
 }
 
-func (n *nativeInstance) GetGlobalValue(name string) (interface{}, error) {
-	panic("implement me")
+func (n *nativeInstance) Get(name string) interface{} {
+	return n.exported[name]
 }
 
 func (n *nativeInstance) CallFunc(name string, args ...interface{}) (interface{}, error) {
 	panic("implement me")
 }
 
-func (n *nativeInstance) Get(name string) interface{} {
-	return n.exported[name]
+func (n *nativeInstance) GetGlobalValue(name string) (interface{}, error) {
+	panic("implement me")
 }
