@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/zxh0/wasm.go/binary"
 	"github.com/zxh0/wasm.go/instance"
 )
@@ -12,5 +14,9 @@ func newTestEnv() instance.Instance {
 }
 
 func assertEqI32(args ...interface{}) (interface{}, error) {
-	return args[0].(int32) == args[1].(int32), nil
+	fmt.Printf("assert_eq_i32: %v\n", args)
+	if args[0].(int32) == args[1].(int32) {
+		return nil, nil
+	}
+	panic(fmt.Errorf("not equal: %v", args))
 }

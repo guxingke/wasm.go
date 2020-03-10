@@ -147,11 +147,15 @@ func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
 `)
 }
 func (c *moduleCompiler) genCallFunc() {
-	c.print(`
-func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {
-	panic("TODO")
-}
-`)
+	c.println("")
+	c.println(`func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {`)
+	c.println("	switch name {")
+	for i, exp := range c.module.ExportSec {
+		c.printf("	case \"%s\": return m.exported%d(args...)\n", exp.Name, i)
+	}
+	c.println(`	default: panic("TODO")`)
+	c.println("	}")
+	c.println("}")
 }
 
 func (c *moduleCompiler) genUtils() {
