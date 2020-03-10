@@ -16,8 +16,8 @@ func (c *moduleCompiler) compile() {
 	c.genInternalFuncs()
 	c.genExportedFuncs()
 	c.genGet()
-	c.genCallFunc()
 	c.genGetGlobalVal()
+	c.genCallFunc()
 	c.genUtils()
 }
 
@@ -139,16 +139,16 @@ func (m *aotModule) Get(name string) interface{} {
 }
 `)
 }
-func (c *moduleCompiler) genCallFunc() {
+func (c *moduleCompiler) genGetGlobalVal() {
 	c.print(`
-func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {
+func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
 	panic("TODO")
 }
 `)
 }
-func (c *moduleCompiler) genGetGlobalVal() {
+func (c *moduleCompiler) genCallFunc() {
 	c.print(`
-func (m *aotModule) GetGlobalValue(name string) (interface{}, error) {
+func (m *aotModule) CallFunc(name string, args ...interface{}) (interface{}, error) {
 	panic("TODO")
 }
 `)
