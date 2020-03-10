@@ -70,10 +70,10 @@ func main() {
 				return compileWat(filename)
 			} else if ctx.Bool(flagNameTest) {
 				return testWast(filename)
-			} else if strings.HasSuffix( filename, ".wasm") {
+			} else if strings.HasSuffix(filename, ".wasm") {
 				return execWasm(filename)
 			} else if strings.HasSuffix(filename, ".so") {
-				return testAOT(filename)
+				return execAOT(filename)
 			} else {
 				return nil
 			}
@@ -129,7 +129,7 @@ func dumpWasm(filename string) error {
 }
 
 func execWasm(filename string) error {
-	//fmt.Println("exec " + filename)
+	fmt.Println("exec " + filename)
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
@@ -153,6 +153,7 @@ func execWasm(filename string) error {
 }
 
 func compileWat(filename string) error {
+	fmt.Println("compile " + filename)
 	m, err := text.CompileModuleFile(filename)
 	if err != nil {
 		return err
@@ -169,6 +170,7 @@ func compileWat(filename string) error {
 }
 
 func testWast(filename string) error {
+	fmt.Println("test " + filename)
 	s, err := text.CompileScriptFile(filename)
 	if err != nil {
 		return err
@@ -176,9 +178,7 @@ func testWast(filename string) error {
 	return newWastTester(s).test()
 }
 
-func testAOT(filename string) error {
-	p, err := plugin.Open("plugin_name.so")
-	if err != nil {
-		return err
-	}
+func execAOT(filename string) error {
+	fmt.Println("exec " + filename)
+
 }
