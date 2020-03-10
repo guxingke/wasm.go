@@ -40,9 +40,9 @@ func (n *NativeInstance) Get(name string) interface{} {
 }
 
 func (n *NativeInstance) CallFunc(name string, args ...interface{}) (interface{}, error) {
-	panic("implement me")
+	return n.exported[name].(Function).Call(args...) // TODO
 }
 
 func (n *NativeInstance) GetGlobalValue(name string) (interface{}, error) {
-	panic("implement me")
+	return n.exported[name].(Global).Get(), nil // TODO
 }
