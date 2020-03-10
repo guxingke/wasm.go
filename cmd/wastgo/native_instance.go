@@ -34,22 +34,13 @@ func (n *nativeInstance) RegisterNoResultsFunc(name string,
 }
 func (n *nativeInstance) RegisterGlobal(name string,
 	vt binary.ValType, mut bool, val uint64) {
-	gt := binary.GlobalType{ValType: vt}
-	if mut {
-		gt.Mut = 1
-	}
-	n.exported[name] = interpreter.NewGlobal(gt, val)
+	n.exported[name] = interpreter.NewGlobal(vt, mut, val)
 }
 func (n *nativeInstance) RegisterTable(name string, min, max uint32) {
-	tt := binary.TableType{
-		ElemType: binary.FuncRef,
-		Limits:   binary.Limits{Min: min, Max: max},
-	}
-	n.exported[name] = interpreter.NewTable(tt)
+	n.exported[name] = interpreter.NewTable(min, max)
 }
 func (n *nativeInstance) RegisterMem(name string, min, max uint32) {
-	mt := binary.MemType{Min: min, Max: max}
-	n.exported[name] = interpreter.NewMemory(mt)
+	n.exported[name] = interpreter.NewMemory(min, max)
 }
 
 func (n *nativeInstance) Get(name string) interface{} {
