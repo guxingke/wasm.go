@@ -17,18 +17,18 @@ func NewNativeInstance() *NativeInstance {
 }
 
 func (n *NativeInstance) RegisterFunc(name string,
-	ft binary.FuncType, f GoFunc) {
+	f GoFunc, paramsAndResult ...binary.ValType) {
+
+	ft := binary.FuncType{}
+	if len(paramsAndResult) > 0 {
+		ft.ParamTypes = paramsAndResult[:len(paramsAndResult)-1]
+		rt := paramsAndResult[len(paramsAndResult)-1]
+		if rt != binary.NoVal {
+			ft.ResultTypes = []binary.ValType{rt}
+		}
+	}
 
 	n.exported[name] = nativeFunction{t: ft, f: f}
-}
-func (n *NativeInstance) RegisterNoResultsFunc(name string,
-	f GoFunc, params ...binary.ValType) {
-
-	ft := binary.FuncType{
-		ParamTypes:  params,
-		ResultTypes: []binary.ValType{},
-	}
-	n.RegisterFunc(name, ft, f)
 }
 
 func (n *NativeInstance) Register(name string, x interface{}) {
